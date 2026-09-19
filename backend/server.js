@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 });
 
 // CORS: allow frontend origin(s), cookies included
-const frontendUrl = "http://localhost:5173";
+const frontendUrl = "https://fullstackrestarant.vercel.app";
 app.use(
   cors({
     origin: [frontendUrl],
