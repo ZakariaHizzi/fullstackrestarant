@@ -1,6 +1,7 @@
 // Simple dish CRUD: public read, admin write
 
 const Dish = require("../models/Dish");
+const { storeImage } = require("../lib/imageStore");
 
 // GET /dishes
 async function getDishes(req, res, next) {
@@ -26,14 +27,16 @@ async function getDishById(req, res, next) {
   }
 }
 
-// Read one dish from JSON or form-data (supports old field names too)
-function readDishInput(body = {}, file) {
+// Read one dish from JSON or form-data (supports old field names too).
+// `file` is an in-memory multer file (memoryStorage) — never touch disk,
+// so this works on read-only serverless filesystems (no EROFS).
+async function readDishInput(body = {}, file) {
   const title = String(body.title ?? body.name ?? "").trim();
   const description = String(body.description ?? body.ingredients ?? body.desc ?? "").trim();
   const category = String(body.category ?? body.tag ?? "").trim();
   const price = body.price;
   let image = String(body.image ?? "").trim();
-  if (file) image = `/uploads/${file.filename}`;
+  if (file) image = await storeImage(file);
   return { title, description, category, price, image };
 }
 
@@ -54,7 +57,7 @@ async function addDish(req, res, next) {
     if (bulk) {
       const docs = [];
       for (const item of bulk) {
-        const d = readDishInput(item || {}, null);
+        const d = await readDishInput(item || {}, null);
         const err = checkDish(d);
         if (err) return res.status(400).json({ success: false, message: err });
         docs.push({ ...d, price: Number(d.price) });
@@ -63,7 +66,7 @@ async function addDish(req, res, next) {
       return res.status(201).json({ success: true, message: "Dishes created", count: created.length, data: created });
     }
 
-    const d = readDishInput(req.body || {}, req.file);
+    const d = await readDishInput(req.body || {}, req.file);
     const err = checkDish(d);
     if (err) return res.status(400).json({ success: false, message: err });
 
@@ -94,7 +97,7 @@ async function updateDish(req, res, next) {
       updates.category = String(body.category ?? body.tag ?? "").trim();
     }
     if (body.image !== undefined) updates.image = body.image;
-    if (req.file) updates.image = `/uploads/${req.file.filename}`;
+    if (req.file) updates.image = await storeImage(req.file);
 
     const dish = await Dish.findByIdAndUpdate(req.params.id, updates, {
       new: true,

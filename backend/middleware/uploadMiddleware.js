@@ -1,19 +1,15 @@
-// Simple image upload: only images, max 2MB, saved in /uploads
+// Simple image upload: only images, max 2MB, kept in memory.
+//
+// NOTE: we intentionally use memoryStorage (not diskStorage).
+// Serverless hosts (Vercel / AWS Lambda, path /var/task/...) have a
+// read-only filesystem except /tmp, so writing to backend/uploads
+// crashes with: EROFS: read-only file system.
+// The controller converts req.file.buffer into a persistent image
+// reference (Cloudinary URL when configured, data-URL otherwise).
 
-const fs = require("fs");
-const path = require("path");
 const multer = require("multer");
 
-const uploadsDir = path.join(__dirname, "..", "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || "").toLowerCase();
-    cb(null, `image-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 function fileFilter(req, file, cb) {
   if (file.mimetype && file.mimetype.startsWith("image/"))

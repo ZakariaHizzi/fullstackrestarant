@@ -14,9 +14,16 @@ const app = express();
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
-// Make sure uploads folder exists
+// Uploads folder: only for backward compatibility with old dishes that
+// stored `/uploads/<file>`. New uploads never touch disk (multer uses
+// memoryStorage) so this must never crash on read-only serverless
+// filesystems (Vercel / AWS Lambda -> EROFS). Best-effort only.
 const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+} catch (err) {
+  console.warn("Uploads dir not writable, skipping static serving:", err.message);
+}
 
 // Basic security headers
 app.use((req, res, next) => {
@@ -87,8 +94,16 @@ app.use("/api/reservations", reservationRoutes);
 // Alias: old clients used /foods and /files
 app.use("/foods", dishRoutes);
 app.use("/api/foods", dishRoutes);
-app.use("/uploads", express.static(uploadsDir));
-app.use("/files", express.static(uploadsDir));
+// Legacy static images (dishes created before the memory-upload fix).
+// Guarded: on read-only serverless filesystems the folder may not exist.
+try {
+  if (fs.existsSync(uploadsDir)) {
+    app.use("/uploads", express.static(uploadsDir));
+    app.use("/files", express.static(uploadsDir));
+  }
+} catch (err) {
+  console.warn("Static uploads disabled:", err.message);
+}
 
 // 404
 app.use((req, res) => {

@@ -219,11 +219,12 @@ export async function deleteReservation(id) {
 /**
  * Resolve a backend image reference to a usable URL.
  * - Absolute URLs (https://...) pass through.
+ * - data: URLs (new memory uploads) and blob: preview URLs pass through.
  * - `/uploads/<file>` paths are served by the backend, so prefix API origin.
  */
 export function resolveImageUrl(image) {
   if (!image) return "";
-  if (/^https?:\/\//i.test(image)) return image;
+  if (/^(https?:\/\/|data:|blob:)/i.test(image)) return image;
   return `${API_BASE_URL}${image.startsWith("/") ? image : `/${image}`}`;
 }
 
