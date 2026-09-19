@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .glow-sm {
+    box-shadow: 0 0 20px rgba(255, 95, 0, 0.4);
+  }
+  .glow-text {
+    text-shadow: 0 0 10px rgba(255, 181, 153, 0.5);
+  }
+  .glow-md {
+    box-shadow: 0 0 30px rgba(255, 95, 0, 0.3);
+  }
+}
