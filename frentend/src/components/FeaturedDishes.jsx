@@ -150,17 +150,6 @@ export default function FeaturedDishes() {
                   <p className="font-body text-body-md text-on-surface-variant">
                     {dish.description}
                   </p>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/dish/${dish.id}`);
-                    }}
-                    className="mt-2 border border-primary text-primary px-6 py-2 rounded font-label text-label-caps hover:bg-primary/10 transition-colors self-start"
-                  >
-                    ADD TO ORDER
-                  </motion.button>
                 </div>
               </>
             ) : (
