@@ -10,7 +10,7 @@
  *   secrets or tokens live here — only a public origin hostname.
  */
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://fullstackrestarant-dj45.vercel.app";
 
 /** Normalized base URL without a trailing slash, e.g. https://api.example.com */
 
